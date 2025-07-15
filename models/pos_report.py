@@ -1,7 +1,4 @@
-# pos_report.py
-
 from odoo import models, fields, api
-import re
 from datetime import date
 import io
 import csv
@@ -48,18 +45,14 @@ class POSSalesReport(models.Model):
                 pc.name AS pos_config_name,
                 ps.name AS session_name,
                 ru.login AS cashier_login,
-                string_agg(DISTINCT he.name, ', ') AS employee_name,
+                he.name AS employee_name,
                 pl.name AS pricelist_name,
-                json_agg(json_build_object(
-                    'product', pt.name,
-                    'price_unit', pol.price_unit,
-                    'qty', pol.qty,
-                    'original_price_unit', pt.list_price
-                )) AS products_json,
-                SUM(pol.qty) AS total_qty,
-                SUM(pt.list_price * pol.qty) AS total_before_tax_discount,
-                SUM(pol.price_subtotal) AS total_subtotal,
-                SUM(pol.price_subtotal_incl) AS total_incl,
+                pt.name AS product_name,
+                pol.qty AS quantity,
+                pt.list_price AS original_price,
+                pol.price_unit AS price_unit,
+                pol.price_subtotal AS subtotal,
+                pol.price_subtotal_incl AS line_total_incl,
                 po.amount_total AS order_total
             FROM 
                 pos_order_line pol
@@ -105,57 +98,26 @@ class POSSalesReport(models.Model):
             params.append(self.state)
 
         query += """
-            GROUP BY po.id, po.name, po.date_order::date, rp.name, pc.name, ps.name,
-                     ru.login, pl.name, po.amount_total
-            ORDER BY po.date_order DESC
+            ORDER BY po.date_order DESC, po.name, pol.id
         """
 
         self.env.cr.execute(query, params)
         rows = self.env.cr.dictfetchall()
 
+        # Post-process tax value
         for r in rows:
-            discount_total = 0.0
-            products_json = r.get('products_json') or []
-            for p in products_json:
-                original = p.get('original_price_unit') or 0.0
-                discounted = p.get('price_unit') or 0.0
-                qty = p.get('qty') or 0.0
-                line_discount = (original - discounted) * qty
-                if line_discount > 0:
-                    discount_total += line_discount
-
-            r['discount_value'] = round(discount_total, 2)
-            r['subtotal_before_tax'] = r['total_subtotal'] or 0
-            r['tax_value'] = (r['total_incl'] or 0) - (r['total_subtotal'] or 0)
+            r['tax_value'] = (r['line_total_incl'] or 0) - (r['subtotal'] or 0)
 
         return rows
-
-    def _extract_discount_percent(self, pricelist_name):
-        if isinstance(pricelist_name, dict):
-            pricelist_name = pricelist_name.get('en_US') or list(pricelist_name.values())[0] or ''
-        elif not isinstance(pricelist_name, str):
-            pricelist_name = str(pricelist_name or '')
-        m = re.search(r'(\d+)%', pricelist_name)
-        return float(m.group(1)) if m else 0.0
-
-    def _get_pricelist_display(self, pricelist_name):
-        if isinstance(pricelist_name, dict):
-            return pricelist_name.get('en_US') or list(pricelist_name.values())[0] or ''
-        elif pricelist_name:
-            return str(pricelist_name)
-        return ''
 
     def _build_html_table(self, rows):
         if not rows:
             return "<p>No data found. Adjust filters and try again.</p>"
 
-        # Totals
-        total_qty = sum(r['total_qty'] or 0 for r in rows)
-        total_before_tax_discount = sum(r['total_before_tax_discount'] or 0 for r in rows)
-        total_subtotal = sum(r['total_subtotal'] or 0 for r in rows)
-        total_discount = sum(r['discount_value'] or 0 for r in rows)
+        total_qty = sum(r['quantity'] or 0 for r in rows)
+        total_subtotal = sum(r['subtotal'] or 0 for r in rows)
         total_tax = sum(r['tax_value'] or 0 for r in rows)
-        total_order = sum(r['order_total'] or 0 for r in rows)
+        total_total_incl = sum(r['line_total_incl'] or 0 for r in rows)
 
         table = """
             <table class='table table-sm table-bordered'>
@@ -169,44 +131,20 @@ class POSSalesReport(models.Model):
                         <th>Cashier</th>
                         <th>Employee</th>
                         <th>Pricelist</th>
-                        <th>Products</th>
-                        <th>Total Qty</th>
-                        <th>Total Before Tax & Discount</th>
-                        <th>Subtotal Before Tax</th>
-                        <th>Discount Value</th>
-                        <th>Tax Value</th>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Original Price</th>
+                        <th>Unit Price</th>
+                        <th>Subtotal</th>
+                        <th>Tax</th>
+                        <th>Line Total Incl</th>
                         <th>Order Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style="font-weight:bold; background:#f0f0f0;">
-                        <td colspan="9" style="text-align:right;">TOTALS:</td>
-                        <td>{total_qty:.2f}</td>
-                        <td>{total_before_tax_discount:.2f}</td>
-                        <td>{total_subtotal:.2f}</td>
-                        <td>{total_discount:.2f}</td>
-                        <td>{total_tax:.2f}</td>
-                        <td>{total_order:.2f}</td>
-                    </tr>
-        """.format(
-            total_qty=total_qty,
-            total_before_tax_discount=total_before_tax_discount,
-            total_subtotal=total_subtotal,
-            total_discount=total_discount,
-            total_tax=total_tax,
-            total_order=total_order,
-        )
+        """
 
         for r in rows:
-            pricelist_name = self._get_pricelist_display(r['pricelist_name'])
-            product_lines = []
-            for p in r['products_json']:
-                prod_name = p['product']
-                if isinstance(prod_name, dict):
-                    prod_name = prod_name.get('en_US') or list(prod_name.values())[0] or ''
-                line = f"{prod_name} ({p['original_price_unit']:.2f}→{p['price_unit']:.2f}x{p['qty']:.2f})"
-                product_lines.append(line)
-            product_html = ", ".join(product_lines)
             table += f"""
                 <tr>
                     <td><a href="/web#id={r['order_id']}&model=pos.order&view_type=form" target="_blank">{r['order_reference']}</a></td>
@@ -216,18 +154,31 @@ class POSSalesReport(models.Model):
                     <td>{r['session_name'] or ''}</td>
                     <td>{r['cashier_login'] or ''}</td>
                     <td>{r['employee_name'] or ''}</td>
-                    <td>{pricelist_name}</td>
-                    <td style="white-space: pre-wrap;">{product_html}</td>
-                    <td>{r['total_qty'] or 0:.2f}</td>
-                    <td>{r['total_before_tax_discount'] or 0:.2f}</td>
-                    <td>{r['total_subtotal'] or 0:.2f}</td>
-                    <td>{r['discount_value'] or 0:.2f}</td>
+                    <td>{r['pricelist_name'] or ''}</td>
+                    <td>{r['product_name'] or ''}</td>
+                    <td>{r['quantity'] or 0:.2f}</td>
+                    <td>{r['original_price'] or 0:.2f}</td>
+                    <td>{r['price_unit'] or 0:.2f}</td>
+                    <td>{r['subtotal'] or 0:.2f}</td>
                     <td>{r['tax_value'] or 0:.2f}</td>
+                    <td>{r['line_total_incl'] or 0:.2f}</td>
                     <td>{r['order_total'] or 0:.2f}</td>
                 </tr>
             """
 
-        table += "</tbody></table>"
+        table += f"""
+            <tr style="font-weight:bold; background:#f0f0f0;">
+                <td colspan="9" style="text-align:right;">TOTALS:</td>
+                <td>{total_qty:.2f}</td>
+                <td></td>
+                <td></td>
+                <td>{total_subtotal:.2f}</td>
+                <td>{total_tax:.2f}</td>
+                <td>{total_total_incl:.2f}</td>
+                <td></td>
+            </tr>
+        </tbody></table>
+        """
         return table
 
     def action_generate_csv(self):
@@ -250,20 +201,11 @@ class POSReportController(http.Controller):
         writer = csv.writer(output)
         writer.writerow([
             'Order Ref', 'Order Date', 'Customer', 'POS', 'Session', 'Cashier',
-            'Employee', 'Pricelist', 'Products', 'Total Qty',
-            'Total Before Tax & Discount', 'Subtotal Before Tax',
-            'Discount Value', 'Tax Value', 'Order Total'
+            'Employee', 'Pricelist', 'Product', 'Qty', 'Original Price',
+            'Unit Price', 'Subtotal', 'Tax', 'Line Total Incl', 'Order Total'
         ])
 
         for r in rows:
-            product_lines = []
-            for p in r['products_json']:
-                name = p['product']
-                if isinstance(name, dict):
-                    name = name.get('en_US') or list(name.values())[0] or ''
-                line = f"{name} ({p['original_price_unit']:.2f}->{p['price_unit']:.2f}x{p['qty']:.2f})"
-                product_lines.append(line)
-
             writer.writerow([
                 r['order_reference'],
                 r['order_date'],
@@ -273,12 +215,13 @@ class POSReportController(http.Controller):
                 r.get('cashier_login', ''),
                 r.get('employee_name', ''),
                 r.get('pricelist_name', ''),
-                " | ".join(product_lines),
-                f"{r.get('total_qty', 0):.2f}",
-                f"{r.get('total_before_tax_discount', 0):.2f}",
-                f"{r.get('subtotal_before_tax', 0):.2f}",
-                f"{r.get('discount_value', 0):.2f}",
+                r.get('product_name', ''),
+                f"{r.get('quantity', 0):.2f}",
+                f"{r.get('original_price', 0):.2f}",
+                f"{r.get('price_unit', 0):.2f}",
+                f"{r.get('subtotal', 0):.2f}",
                 f"{r.get('tax_value', 0):.2f}",
+                f"{r.get('line_total_incl', 0):.2f}",
                 f"{r.get('order_total', 0):.2f}",
             ])
 

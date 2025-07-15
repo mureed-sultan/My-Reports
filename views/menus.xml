@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- ✅ Root menu: My Reports -->
-    <menuitem id="menu_my_reports_root"
-              name="My Reports"
-              sequence="20"
-              groups="point_of_sale.group_pos_manager"
-              web_icon="point_of_sale,static/description/icon.png" />
+    <!-- ✅ Root Menu under POS for Reports -->
+    <menuitem id="menu_pos_reports_root"
+              name="POS Reports"
+              parent="point_of_sale.menu_point_root"
+              sequence="100"/>
 
-    <!-- ✅ Child menu: POS Sales Report -->
+    <!-- ✅ POS Sales Report under POS Reports -->
     <menuitem id="menu_pos_sales_report"
               name="POS Sales Report"
-              parent="menu_my_reports_root"
+              parent="menu_pos_reports_root"
               action="action_pos_sales_report"
               sequence="1"
               groups="point_of_sale.group_pos_manager"/>
