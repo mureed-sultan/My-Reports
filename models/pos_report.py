@@ -97,14 +97,11 @@ class POSSalesReport(models.Model):
             query += " AND po.state = %s"
             params.append(self.state)
 
-        query += """
-            ORDER BY po.date_order DESC, po.name, pol.id
-        """
+        query += " ORDER BY po.date_order DESC, po.name, pol.id "
 
         self.env.cr.execute(query, params)
         rows = self.env.cr.dictfetchall()
 
-        # Post-process tax value
         for r in rows:
             r['tax_value'] = (r['line_total_incl'] or 0) - (r['subtotal'] or 0)
 
@@ -118,6 +115,17 @@ class POSSalesReport(models.Model):
         total_subtotal = sum(r['subtotal'] or 0 for r in rows)
         total_tax = sum(r['tax_value'] or 0 for r in rows)
         total_total_incl = sum(r['line_total_incl'] or 0 for r in rows)
+
+        totals_block = f"""
+            <h4>Summary Totals</h4>
+            <ul>
+                <li>Total Quantity: <b>{total_qty:.2f}</b></li>
+                <li>Total Subtotal (Before Tax): <b>{total_subtotal:.2f}</b></li>
+                <li>Total Tax: <b>{total_tax:.2f}</b></li>
+                <li>Total Including Tax: <b>{total_total_incl:.2f}</b></li>
+            </ul>
+            <br/>
+        """
 
         table = """
             <table class='table table-sm table-bordered'>
@@ -142,9 +150,39 @@ class POSSalesReport(models.Model):
                     </tr>
                 </thead>
                 <tbody>
-        """
+                <tr style="font-weight:bold; background:#f0f0f0;">
+                    <td colspan="9" style="text-align:right;">TOTALS:</td>
+                    <td>{total_qty:.2f}</td>
+                    <td></td>
+                    <td></td>
+                    <td>{total_subtotal:.2f}</td>
+                    <td>{total_tax:.2f}</td>
+                    <td>{total_total_incl:.2f}</td>
+                    <td></td>
+                </tr>
+        """.format(
+            total_qty=total_qty,
+            total_subtotal=total_subtotal,
+            total_tax=total_tax,
+            total_total_incl=total_total_incl
+        )
 
         for r in rows:
+            pricelist_name = r.get('pricelist_name', '')
+            if isinstance(pricelist_name, dict):
+                pricelist_name = pricelist_name.get('en_US', '')
+
+            product_name = r.get('product_name', '')
+            if isinstance(product_name, dict):
+                product_name = product_name.get('en_US', '')
+
+            product_display = "{} ({:.2f} x {:.2f} = {:.2f})".format(
+                product_name,
+                r['quantity'] or 0,
+                r['price_unit'] or 0,
+                (r['quantity'] or 0) * (r['price_unit'] or 0)
+            )
+
             table += f"""
                 <tr>
                     <td><a href="/web#id={r['order_id']}&model=pos.order&view_type=form" target="_blank">{r['order_reference']}</a></td>
@@ -154,8 +192,8 @@ class POSSalesReport(models.Model):
                     <td>{r['session_name'] or ''}</td>
                     <td>{r['cashier_login'] or ''}</td>
                     <td>{r['employee_name'] or ''}</td>
-                    <td>{r['pricelist_name'] or ''}</td>
-                    <td>{r['product_name'] or ''}</td>
+                    <td>{pricelist_name}</td>
+                    <td>{product_display}</td>
                     <td>{r['quantity'] or 0:.2f}</td>
                     <td>{r['original_price'] or 0:.2f}</td>
                     <td>{r['price_unit'] or 0:.2f}</td>
@@ -166,20 +204,8 @@ class POSSalesReport(models.Model):
                 </tr>
             """
 
-        table += f"""
-            <tr style="font-weight:bold; background:#f0f0f0;">
-                <td colspan="9" style="text-align:right;">TOTALS:</td>
-                <td>{total_qty:.2f}</td>
-                <td></td>
-                <td></td>
-                <td>{total_subtotal:.2f}</td>
-                <td>{total_tax:.2f}</td>
-                <td>{total_total_incl:.2f}</td>
-                <td></td>
-            </tr>
-        </tbody></table>
-        """
-        return table
+        table += "</tbody></table>"
+        return totals_block + table
 
     def action_generate_csv(self):
         self.ensure_one()
@@ -206,6 +232,21 @@ class POSReportController(http.Controller):
         ])
 
         for r in rows:
+            pricelist_name = r.get('pricelist_name', '')
+            if isinstance(pricelist_name, dict):
+                pricelist_name = pricelist_name.get('en_US', '')
+
+            product_name = r.get('product_name', '')
+            if isinstance(product_name, dict):
+                product_name = product_name.get('en_US', '')
+
+            product_display = "{} ({:.2f} x {:.2f} = {:.2f})".format(
+                product_name,
+                r['quantity'] or 0,
+                r['price_unit'] or 0,
+                (r['quantity'] or 0) * (r['price_unit'] or 0)
+            )
+
             writer.writerow([
                 r['order_reference'],
                 r['order_date'],
@@ -214,8 +255,8 @@ class POSReportController(http.Controller):
                 r.get('session_name', ''),
                 r.get('cashier_login', ''),
                 r.get('employee_name', ''),
-                r.get('pricelist_name', ''),
-                r.get('product_name', ''),
+                pricelist_name,
+                product_display,
                 f"{r.get('quantity', 0):.2f}",
                 f"{r.get('original_price', 0):.2f}",
                 f"{r.get('price_unit', 0):.2f}",
