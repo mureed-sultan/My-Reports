@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "custom_addons/myreports",
+    'name': "POS Sales Report",
 
     'summary': "Short (1 phrase/line) summary of the module's purpose",
 
@@ -8,12 +8,8 @@
 Long description of module's purpose
     """,
 
-    'author': "My Company",
+    'author': "iStallana Solutions",
     'website': "https://www.yourcompany.com",
-
-    # Categories can be used to filter modules in modules listing
-    # Check https://github.com/odoo/odoo/blob/15.0/odoo/addons/base/data/ir_module_category_data.xml
-    # for the full list
     'category': 'Uncategorized',
     'version': '0.1',
 
@@ -23,8 +19,9 @@ Long description of module's purpose
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'views/pos_report.xml',  # ✅ Load first: contains action_pos_sales_report
-        'views/menus.xml',  # ✅ Load second: uses the action
+        'views/pos_report.xml',
+        'views/customer_report_views.xml',
+        'views/menus.xml',
     ],
 
     # only loaded in demonstration mode

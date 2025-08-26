@@ -13,4 +13,12 @@
               action="action_pos_sales_report"
               sequence="1"
               groups="point_of_sale.group_pos_manager"/>
+
+    <!-- ✅ NEW: Customer Report under POS Reports -->
+       <menuitem id="menu_pos_customer_report"
+              name="Customer Report"
+              parent="menu_pos_reports_root"
+              action="action_pos_customer_report"
+              sequence="2"
+              groups="point_of_sale.group_pos_manager"/>
 </odoo>

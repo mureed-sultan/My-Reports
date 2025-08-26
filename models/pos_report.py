@@ -1,8 +1,8 @@
-from odoo import models, fields, api
-from datetime import date
+from odoo import models, fields, api, http
+from datetime import date, datetime
 import io
 import csv
-from odoo import http
+import json
 from odoo.http import request, content_disposition
 
 
@@ -10,6 +10,7 @@ class POSSalesReport(models.Model):
     _name = 'pos.sales.report'
     _description = 'POS Sales Report'
 
+    # ========= FILTER FIELDS =========
     start_date = fields.Date("Start Date", default=lambda self: date.today())
     end_date = fields.Date("End Date", default=lambda self: date.today())
     product_ids = fields.Many2many('product.product', string="Products")
@@ -26,18 +27,34 @@ class POSSalesReport(models.Model):
         ('cancel', 'Cancelled')
     ], string="Order Status")
     html_table = fields.Html("Report", sanitize=False)
-    csv_file = fields.Binary("CSV File", readonly=True)
-    csv_filename = fields.Char("Filename", readonly=True)
+    report_data_json = fields.Json("Report Data")  # <-- store rows as JSON
 
+    # ========= MAIN ACTION =========
     def action_fetch_report(self):
         self.ensure_one()
         rows = self.fetch_report_data()
-        self.html_table = self._build_html_table(rows)
 
+        # convert dates to strings for JSON safety
+        def serialize(value):
+            if isinstance(value, (date, datetime)):
+                return value.isoformat()
+            return value
+
+        serialized_rows = [
+            {k: serialize(v) for k, v in row.items()} for row in rows
+        ]
+
+        # save html + json
+        self.html_table = self._build_html_table(rows)
+        self.report_data_json = serialized_rows
+
+    # ========= DATA FETCHING =========
     def fetch_report_data(self):
         self.ensure_one()
+
         query = """
             SELECT 
+                pol.id AS line_id,
                 po.id AS order_id,
                 po.name AS order_reference,
                 po.date_order::date AS order_date,
@@ -46,8 +63,9 @@ class POSSalesReport(models.Model):
                 ps.name AS session_name,
                 ru.login AS cashier_login,
                 he.name AS employee_name,
-                pl.name AS pricelist_name,
-                pt.name AS product_name,
+                pl.name ->> 'en_US' AS pricelist_name,
+                pt.name ->> 'en_US' AS product_name,
+                pt.type AS product_type,
                 pol.qty AS quantity,
                 pt.list_price AS original_price,
                 pol.price_unit AS price_unit,
@@ -69,6 +87,7 @@ class POSSalesReport(models.Model):
         """
         params = []
 
+        # ==== APPLY FILTERS ====
         if self.start_date:
             query += " AND po.date_order::date >= %s"
             params.append(self.start_date)
@@ -97,24 +116,42 @@ class POSSalesReport(models.Model):
             query += " AND po.state = %s"
             params.append(self.state)
 
-        query += " ORDER BY po.date_order DESC, po.name, pol.id "
+        # ==== ORDERING ====
+        query += " ORDER BY po.date_order DESC, po.id DESC, pol.id ASC"
 
         self.env.cr.execute(query, params)
         rows = self.env.cr.dictfetchall()
 
+        # ==== ENRICH ROWS ====
         for r in rows:
+            qty = float(r['quantity'] or 0.0)
+            original = float(r['original_price'] or 0.0)  # pt.list_price
+            unit_price = float(r['price_unit'] or 0.0)    # actual applied price
+
+            # Pricelist discount calculation
+            discount_value = (original - unit_price) * qty if original > unit_price else 0.0
+            discount_percent = ((original - unit_price) / original * 100.0) if original > 0 else 0.0
+
             r['tax_value'] = (r['line_total_incl'] or 0) - (r['subtotal'] or 0)
+            r['discount_amount'] = discount_value
+            r['discount'] = discount_percent
+            r['net_sale'] = r['subtotal'] or 0.0
+            r['sale_after_tax'] = r['line_total_incl'] or 0.0
+            r['product_display'] = f"{r['product_name']} ({qty:.2f} x {unit_price:.2f} = {r['subtotal']:.2f})"
 
         return rows
 
+    # ========= HTML TABLE BUILDER =========
     def _build_html_table(self, rows):
         if not rows:
             return "<p>No data found. Adjust filters and try again.</p>"
 
+        # Totals
         total_qty = sum(r['quantity'] or 0 for r in rows)
         total_subtotal = sum(r['subtotal'] or 0 for r in rows)
         total_tax = sum(r['tax_value'] or 0 for r in rows)
         total_total_incl = sum(r['line_total_incl'] or 0 for r in rows)
+        total_discount_amount = sum(r.get('discount_amount', 0) for r in rows)
 
         totals_block = f"""
             <h4>Summary Totals</h4>
@@ -122,12 +159,13 @@ class POSSalesReport(models.Model):
                 <li>Total Quantity: <b>{total_qty:.2f}</b></li>
                 <li>Total Subtotal (Before Tax): <b>{total_subtotal:.2f}</b></li>
                 <li>Total Tax: <b>{total_tax:.2f}</b></li>
+                <li>Total Discount: <b>{total_discount_amount:.2f}</b></li>
                 <li>Total Including Tax: <b>{total_total_incl:.2f}</b></li>
             </ul>
             <br/>
         """
 
-        table = """
+        table = f"""
             <table class='table table-sm table-bordered'>
                 <thead>
                     <tr>
@@ -145,7 +183,10 @@ class POSSalesReport(models.Model):
                         <th>Unit Price</th>
                         <th>Subtotal</th>
                         <th>Tax</th>
-                        <th>Line Total Incl</th>
+                        <th>Discount (%)</th>
+                        <th>Discount (Value)</th>
+                        <th>Net Sale Before Tax</th>
+                        <th>Sale After Tax</th>
                         <th>Order Total</th>
                     </tr>
                 </thead>
@@ -157,34 +198,18 @@ class POSSalesReport(models.Model):
                     <td></td>
                     <td>{total_subtotal:.2f}</td>
                     <td>{total_tax:.2f}</td>
+                    <td></td>
+                    <td>{total_discount_amount:.2f}</td>
+                    <td>{total_subtotal:.2f}</td>
                     <td>{total_total_incl:.2f}</td>
                     <td></td>
                 </tr>
-        """.format(
-            total_qty=total_qty,
-            total_subtotal=total_subtotal,
-            total_tax=total_tax,
-            total_total_incl=total_total_incl
-        )
+        """
 
+        # Render every order line separately
         for r in rows:
-            pricelist_name = r.get('pricelist_name', '')
-            if isinstance(pricelist_name, dict):
-                pricelist_name = pricelist_name.get('en_US', '')
-
-            product_name = r.get('product_name', '')
-            if isinstance(product_name, dict):
-                product_name = product_name.get('en_US', '')
-
-            product_display = "{} ({:.2f} x {:.2f} = {:.2f})".format(
-                product_name,
-                r['quantity'] or 0,
-                r['price_unit'] or 0,
-                (r['quantity'] or 0) * (r['price_unit'] or 0)
-            )
-
             table += f"""
-                <tr>
+                <tr data-line-id="{r['line_id']}">
                     <td><a href="/web#id={r['order_id']}&model=pos.order&view_type=form" target="_blank">{r['order_reference']}</a></td>
                     <td>{r['order_date']}</td>
                     <td>{r['customer_name'] or ''}</td>
@@ -192,21 +217,24 @@ class POSSalesReport(models.Model):
                     <td>{r['session_name'] or ''}</td>
                     <td>{r['cashier_login'] or ''}</td>
                     <td>{r['employee_name'] or ''}</td>
-                    <td>{pricelist_name}</td>
-                    <td>{product_display}</td>
+                    <td>{r['pricelist_name'] or ''}</td>
+                    <td>{r['product_display']}</td>
                     <td>{r['quantity'] or 0:.2f}</td>
                     <td>{r['original_price'] or 0:.2f}</td>
                     <td>{r['price_unit'] or 0:.2f}</td>
                     <td>{r['subtotal'] or 0:.2f}</td>
                     <td>{r['tax_value'] or 0:.2f}</td>
-                    <td>{r['line_total_incl'] or 0:.2f}</td>
+                    <td>{r['discount'] or 0:.2f}</td>
+                    <td>{r['discount_amount'] or 0:.2f}</td>
+                    <td>{r['net_sale'] or 0:.2f}</td>
+                    <td>{r['sale_after_tax'] or 0:.2f}</td>
                     <td>{r['order_total'] or 0:.2f}</td>
                 </tr>
             """
-
         table += "</tbody></table>"
         return totals_block + table
 
+    # ========= CSV EXPORT =========
     def action_generate_csv(self):
         self.ensure_one()
         return {
@@ -228,41 +256,30 @@ class POSReportController(http.Controller):
         writer.writerow([
             'Order Ref', 'Order Date', 'Customer', 'POS', 'Session', 'Cashier',
             'Employee', 'Pricelist', 'Product', 'Qty', 'Original Price',
-            'Unit Price', 'Subtotal', 'Tax', 'Line Total Incl', 'Order Total'
+            'Unit Price', 'Subtotal', 'Tax', 'Discount (%)', 'Discount (Value)',
+            'Net Sale Before Tax', 'Sale After Tax', 'Order Total'
         ])
 
         for r in rows:
-            pricelist_name = r.get('pricelist_name', '')
-            if isinstance(pricelist_name, dict):
-                pricelist_name = pricelist_name.get('en_US', '')
-
-            product_name = r.get('product_name', '')
-            if isinstance(product_name, dict):
-                product_name = product_name.get('en_US', '')
-
-            product_display = "{} ({:.2f} x {:.2f} = {:.2f})".format(
-                product_name,
-                r['quantity'] or 0,
-                r['price_unit'] or 0,
-                (r['quantity'] or 0) * (r['price_unit'] or 0)
-            )
-
             writer.writerow([
                 r['order_reference'],
-                r['order_date'],
+                r['order_date'].isoformat() if isinstance(r['order_date'], (date, datetime)) else r['order_date'],
                 r.get('customer_name', ''),
                 r.get('pos_config_name', ''),
                 r.get('session_name', ''),
                 r.get('cashier_login', ''),
                 r.get('employee_name', ''),
-                pricelist_name,
-                product_display,
+                r.get('pricelist_name', ''),
+                r.get('product_display', ''),
                 f"{r.get('quantity', 0):.2f}",
                 f"{r.get('original_price', 0):.2f}",
                 f"{r.get('price_unit', 0):.2f}",
                 f"{r.get('subtotal', 0):.2f}",
                 f"{r.get('tax_value', 0):.2f}",
-                f"{r.get('line_total_incl', 0):.2f}",
+                f"{r.get('discount', 0):.2f}",
+                f"{r.get('discount_amount', 0):.2f}",
+                f"{r.get('net_sale', 0):.2f}",
+                f"{r.get('sale_after_tax', 0):.2f}",
                 f"{r.get('order_total', 0):.2f}",
             ])
 
