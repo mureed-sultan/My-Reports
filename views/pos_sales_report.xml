@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_sales_report_wizard_form" model="ir.ui.view">
+        <field name="name">pos.sales.report.wizard.form</field>
+        <field name="model">pos.sales.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="POS Sales Report">
+                <sheet>
+                    <group string="Filters" col="4">
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="category_ids" widget="many2many_tags"/>
+                        <field name="employee_ids" widget="many2many_tags"/>
+                        <button name="action_fetch_details"
+                                type="object"
+                                string="Fetch Details"
+                                icon="fa-search"
+                                class="btn-primary"
+                                style="margin-top:20px;"/>
+                        <button name="action_generate_csv"
+                                type="object"
+                                string="Download CSV"
+                                icon="fa-download"
+                                class="btn-secondary"/>
+<!--                        <button string="Close" class="btn-secondary" special="cancel"/>-->
+                    </group>
+
+                    <separator string="Report Details"/>
+                    <field name="line_ids" nolabel="1" mode="list" readonly="1" colspan="4">
+                        <list string="POS Sales Report Details">
+                            <field name="employee_name"/>
+                            <field name="order_reference"/>
+                            <field name="order_date"/>
+                            <field name="customer_name"/>
+                            <field name="product_name"/>
+                            <field name="category_name"/>
+                            <field name="quantity_sold"/>
+                            <field name="subtotal_excl_tax"/>
+                            <field name="order_total"/>
+                        </list>
+                    </field>
+
+                    <group>
+                        <field name="file_name" readonly="1"/>
+                        <field name="file_data" filename="file_name" readonly="1"/>
+                    </group>
+
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+<record id="action_pos_sales_report_wizard" model="ir.actions.act_window">
+    <field name="name">POS Commission Report</field>
+    <field name="res_model">pos.sales.report.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">current</field>
+</record>
+
+</odoo>

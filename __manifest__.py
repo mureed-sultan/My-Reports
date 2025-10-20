@@ -21,6 +21,7 @@ Long description of module's purpose
         'security/ir.model.access.csv',
         'views/pos_report.xml',
         'views/customer_report_views.xml',
+        'views/pos_sales_report.xml',
         'views/menus.xml',
     ],
 

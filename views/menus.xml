@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- ✅ Root Menu under POS for Reports -->
+    <!-- ✅ Root Menu under POS for all custom reports -->
     <menuitem id="menu_pos_reports_root"
               name="POS Reports"
               parent="point_of_sale.menu_point_root"
-              sequence="100"/>
+              sequence="100"
+              groups="point_of_sale.group_pos_manager"/>
 
-    <!-- ✅ POS Sales Report under POS Reports -->
+    <!-- ✅ Submenu: POS Sales Report -->
     <menuitem id="menu_pos_sales_report"
-              name="POS Sales Report"
+              name="POS Commission Report"
               parent="menu_pos_reports_root"
-              action="action_pos_sales_report"
+              action="action_pos_sales_report_wizard"
               sequence="1"
               groups="point_of_sale.group_pos_manager"/>
 
-    <!-- ✅ NEW: Customer Report under POS Reports -->
-       <menuitem id="menu_pos_customer_report"
+    <!-- ✅ Submenu: Customer Report (placeholder for your other report) -->
+    <menuitem id="menu_pos_customer_report"
               name="Customer Report"
               parent="menu_pos_reports_root"
               action="action_pos_customer_report"
