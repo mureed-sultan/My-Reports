@@ -36,6 +36,7 @@
                             <field name="category_name"/>
                             <field name="quantity_sold"/>
                             <field name="subtotal_excl_tax"/>
+                            <field name="tax_value"/>
                             <field name="order_total"/>
                         </list>
                     </field>
