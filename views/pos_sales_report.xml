@@ -1,62 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Wizard Form (Summary) -->
     <record id="view_pos_sales_report_wizard_form" model="ir.ui.view">
         <field name="name">pos.sales.report.wizard.form</field>
         <field name="model">pos.sales.report.wizard</field>
         <field name="arch" type="xml">
-            <form string="POS Sales Report">
+            <form string="POS Commission Report">
                 <sheet>
                     <group string="Filters" col="4">
                         <field name="start_date"/>
                         <field name="end_date"/>
                         <field name="category_ids" widget="many2many_tags"/>
-                        <field name="employee_ids" widget="many2many_tags"/>
-                        <button name="action_fetch_details"
-                                type="object"
-                                string="Fetch Details"
-                                icon="fa-search"
-                                class="btn-primary"
-                                style="margin-top:20px;"/>
-                        <button name="action_generate_csv"
-                                type="object"
-                                string="Download CSV"
-                                icon="fa-download"
-                                class="btn-secondary"/>
-<!--                        <button string="Close" class="btn-secondary" special="cancel"/>-->
+                        <button name="action_fetch_details" type="object" string="Generate Report"
+                                icon="fa-search" class="btn-primary" style="margin-top:15px;"/>
+                        <button name="action_generate_csv" type="object" string="Download Summary CSV"
+                                icon="fa-download" class="btn-secondary"/>
                     </group>
 
-                    <separator string="Report Details"/>
+                    <separator string="Employee Commission Summary"/>
+                    <group col="1">
+                        <field name="total_sales_all" readonly="1"/>
+                    </group>
+
                     <field name="line_ids" nolabel="1" mode="list" readonly="1" colspan="4">
-                        <list string="POS Sales Report Details">
+                        <list string="Employee Summary">
                             <field name="employee_name"/>
-                            <field name="order_reference"/>
-                            <field name="order_date"/>
-                            <field name="customer_name"/>
-                            <field name="product_name"/>
-                            <field name="category_name"/>
-                            <field name="quantity_sold"/>
-                            <field name="subtotal_excl_tax"/>
-                            <field name="tax_value"/>
-                            <field name="order_total"/>
+                            <field name="employee_barcode"/>
+                            <field name="target_commission"/>
+                            <field name="commission_rate"/>
+                            <field name="total_sales"/>
+                            <field name="earned_commission"/>
+                            <button name="action_view_employee_details"
+                                    string="View Details"
+                                    type="object"
+                                    icon="fa-eye"
+                                    class="btn-primary"
+                                    context="{'from_list': True}"/>
                         </list>
                     </field>
-
-                    <group>
-                        <field name="file_name" readonly="1"/>
-                        <field name="file_data" filename="file_name" readonly="1"/>
-                    </group>
-
-
                 </sheet>
             </form>
         </field>
     </record>
 
-<record id="action_pos_sales_report_wizard" model="ir.actions.act_window">
-    <field name="name">POS Commission Report</field>
-    <field name="res_model">pos.sales.report.wizard</field>
-    <field name="view_mode">form</field>
-    <field name="target">current</field>
-</record>
+    <!-- Detail Form -->
+    <record id="view_pos_sales_report_wizard_form_with_details" model="ir.ui.view">
+        <field name="name">pos.sales.report.wizard.form.details</field>
+        <field name="model">pos.sales.report.wizard</field>
+        <field name="priority" eval="20"/>
+        <field name="arch" type="xml">
+            <form string="POS Sales Details">
+                <sheet>
+                    <button name="action_generate_detail_csv"
+                            type="object"
+                            string="Download Detailed CSV"
+                            icon="fa-download"
+                            class="btn-primary"
+                            style="margin-bottom:10px;"/>
+
+                    <group string="Summary Totals" col="3">
+                        <field name="total_subtotal_excl_tax" readonly="1"/>
+                        <field name="total_tax_value" readonly="1"/>
+                        <field name="total_order_total" readonly="1"/>
+                    </group>
+
+                    <separator string="Detailed Sales Lines"/>
+                    <field name="detail_line_ids" nolabel="1" mode="list" colspan="4">
+                        <list string="Employee Sales Details">
+                            <field name="employee_name"/>
+                            <field name="order_reference"/>
+                            <field name="order_date"/>
+                            <field name="product_name"/>
+                            <field name="category_name"/>
+                            <field name="quantity_sold"/>
+                            <field name="subtotal_excl_tax"/>
+                            <field name="subtotal_incl_tax"/>
+                            <field name="tax_value"/>
+                            <field name="order_total"/>
+                        </list>
+                    </field>
+
+                    <footer>
+                        <button string="Back to Summary" type="object" name="action_fetch_details" class="btn-default"/>
+                        <button string="Close" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Main Wizard Action -->
+    <record id="action_pos_sales_report_wizard" model="ir.actions.act_window">
+        <field name="name">POS Employee Commission Report</field>
+        <field name="res_model">pos.sales.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_pos_sales_report_wizard_form"/>
+        <field name="target">current</field>
+    </record>
 
 </odoo>

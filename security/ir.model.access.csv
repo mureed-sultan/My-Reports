@@ -4,3 +4,4 @@ access_pos_sales_report_admin,pos.sales.report.admin,model_pos_sales_report,poin
 access_pos_customer_report_admin,pos.customer.report.admin,model_pos_customer_report,base.group_system,1,1,1,0
 access_pos_sales_report_wizard_admin,pos.sales.report.wizard.admin,model_pos_sales_report_wizard,point_of_sale.group_pos_manager,1,1,1,1
 access_pos_sales_report_line_admin,pos.sales.report.line.admin,model_pos_sales_report_line,point_of_sale.group_pos_manager,1,1,1,1
+access_pos_sales_report_detail_admin,pos.sales.report.detail.admin,model_pos_sales_report_detail,point_of_sale.group_pos_manager,1,1,1,1
