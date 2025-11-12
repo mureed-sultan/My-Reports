@@ -44,7 +44,7 @@ class PosSalesReportLine(models.TransientModel):
             SELECT
                 po.name AS order_reference,
                 po.date_order::date AS order_date,
-                pt.name AS product_name,custom report
+                pt.name AS product_name,
                 pcateg.name AS category_name,
                 pol.qty AS quantity_sold,
                 pol.price_subtotal AS subtotal_excl_tax,
@@ -130,9 +130,6 @@ class PosSalesReportWizard(models.TransientModel):
     total_tax_value = fields.Float("Total Tax", compute="_compute_totals", store=True)
     total_order_total = fields.Float("Total Order Amount", compute="_compute_totals", store=True)
     total_sales_all = fields.Float("Total Sales (All Employees)", compute="_compute_total_sales_all", store=True)
-
-    def write(self, vals):
-        raise UserError("You cannot modify this wizard manually.")
 
     @api.depends('detail_line_ids')
     def _compute_totals(self):
