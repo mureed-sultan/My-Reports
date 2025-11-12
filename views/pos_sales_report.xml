@@ -49,7 +49,7 @@
         <field name="model">pos.sales.report.wizard</field>
         <field name="priority" eval="20"/>
         <field name="arch" type="xml">
-            <form string="POS Sales Details">
+            <form string="POS Sales Details" edit="false" create="false" delete="false">
                 <sheet>
                     <button name="action_generate_detail_csv"
                             type="object"
@@ -65,7 +65,11 @@
                     </group>
 
                     <separator string="Detailed Sales Lines"/>
-                    <field name="detail_line_ids" nolabel="1" mode="list" colspan="4">
+                    <field name="detail_line_ids"
+                           nolabel="1"
+                           mode="list"
+                           colspan="4"
+                           readonly="1">
                         <list string="Employee Sales Details">
                             <field name="employee_name"/>
                             <field name="order_reference"/>
@@ -88,7 +92,6 @@
             </form>
         </field>
     </record>
-
     <!-- Main Wizard Action -->
     <record id="action_pos_sales_report_wizard" model="ir.actions.act_window">
         <field name="name">POS Employee Commission Report</field>
