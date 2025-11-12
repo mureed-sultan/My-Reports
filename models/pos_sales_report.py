@@ -84,7 +84,7 @@ class PosSalesReportLine(models.TransientModel):
             'res_id': wizard.id,
             'view_mode': 'form',
             'target': 'current',
-            'views': [(self.env.ref('myreports.view_pos_sales_report_wizard_form_with_details').id, 'form')],
+            'views': [(self.env.ref('myreport.view_pos_sales_report_wizard_form_with_details').id, 'form')],
         }
 
 
