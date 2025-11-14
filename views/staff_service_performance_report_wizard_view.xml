@@ -1,0 +1,30 @@
+<odoo>
+    <record id="view_pos_sales_report_page_form" model="ir.ui.view">
+        <field name="name">pos.sales.report.page.form</field>
+        <field name="model">pos.sales.report.page</field>
+        <field name="arch" type="xml">
+            <form string="Staff Service Performance Report">
+                <sheet>
+                    <group>
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                    <field name="branch_id"/>
+<field name="employee_id"/>
+
+ <button string="Fetch Report" type="object" name="generate_report" class="btn-primary"/>
+    <button string="Download CSV" type="object" name="download_csv" class="btn-secondary"/>                    </group>
+                    <group>
+                        <field name="report_html" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pos_sales_report_page" model="ir.actions.act_window">
+        <field name="name">Staff Service Performance Report</field>
+        <field name="res_model">pos.sales.report.page</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+</odoo>

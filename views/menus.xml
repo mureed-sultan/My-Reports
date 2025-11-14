@@ -8,12 +8,12 @@
               groups="point_of_sale.group_pos_manager"/>
 
     <!-- ✅ Submenu: POS Sales Report -->
-    <menuitem id="menu_pos_sales_report"
-              name="POS Commission Report"
-              parent="menu_pos_reports_root"
-              action="action_pos_sales_report_wizard"
-              sequence="1"
-              groups="point_of_sale.group_pos_manager"/>
+<!--    <menuitem id="menu_pos_sales_report"-->
+<!--              name="POS Commission Report"-->
+<!--              parent="menu_pos_reports_root"-->
+<!--              action="action_pos_sales_report_wizard"-->
+<!--              sequence="1"-->
+<!--              groups="point_of_sale.group_pos_manager"/>-->
 
     <!-- ✅ Submenu: Customer Report (placeholder for your other report) -->
     <menuitem id="menu_pos_customer_report"
@@ -22,4 +22,16 @@
               action="action_pos_customer_report"
               sequence="2"
               groups="point_of_sale.group_pos_manager"/>
+
+    <!-- POS Sales Report page -->
+    <menuitem id="menu_staff_service_report"
+              name="Staff Service Performance Report"
+              parent="menu_pos_reports_root"
+              action="action_pos_sales_report_page"
+              sequence="10"
+              groups="point_of_sale.group_pos_manager"/>
+
+
+
+
 </odoo>
