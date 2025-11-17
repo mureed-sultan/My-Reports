@@ -10,7 +10,7 @@
                     <group string="Filters" col="4">
                         <field name="start_date"/>
                         <field name="end_date"/>
-<!--                        <field name="category_ids" widget="many2many_tags"/>-->
+                        <field name="category_ids" widget="many2many_tags"/>
                         <button name="action_fetch_details" type="object" string="Generate Report"
                                 icon="fa-search" class="btn-primary" style="margin-top:15px;"/>
                         <button name="action_generate_csv" type="object" string="Download Summary CSV"
@@ -68,22 +68,20 @@
                     <field name="detail_line_ids" nolabel="1" mode="list" colspan="4">
                         <list string="Employee Sales Details">
                             <field name="employee_name"/>
-                            <field name="employee_name" readonly="1"/>
-                            <field name="order_reference" readonly="1"/>
-                            <field name="order_date" readonly="1"/>
-                            <field name="product_name" readonly="1"/>
-                            <field name="category_name" readonly="1"/>
-                            <field name="quantity_sold" readonly="1"/>
-                            <field name="subtotal_excl_tax" readonly="1"/>
-                            <field name="subtotal_incl_tax" readonly="1"/>
-                            <field name="tax_value" readonly="1"/>
-                            <field name="order_total" readonly="1"/>
-
+                            <field name="order_reference"/>
+                            <field name="order_date"/>
+                            <field name="product_name"/>
+                            <field name="category_name"/>
+                            <field name="quantity_sold"/>
+                            <field name="subtotal_excl_tax"/>
+                            <field name="subtotal_incl_tax"/>
+                            <field name="tax_value"/>
+                            <field name="order_total"/>
                         </list>
                     </field>
 
                     <footer>
-<!--                        <button string="Back to Summary" type="object" name="action_fetch_details" class="btn-default"/>-->
+                        <button string="Back to Summary" type="object" name="action_fetch_details" class="btn-default"/>
                         <button string="Close" class="btn-secondary" special="cancel"/>
                     </footer>
                 </sheet>

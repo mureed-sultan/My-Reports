@@ -1,57 +1,52 @@
-<!-- pos_report.xml -->
 <odoo>
     <!-- Form view -->
-    <record id="view_pos_sales_report_form" model="ir.ui.view">
-        <field name="name">pos.sales.report.form</field>
-        <field name="model">pos.sales.report</field>
+    <record id="view_pos_customer_report_form" model="ir.ui.view">
+        <field name="name">pos.customer.report.form</field>
+        <field name="model">pos.customer.report</field>
         <field name="arch" type="xml">
-            <form string="POS Sales Report" class="o_form_full_width">
-                <group string="Filters" colspan="4">
-                    <group>
-                        <field name="start_date"/>
-                        <field name="end_date"/>
-                        <field name="user_ids" widget="many2many_tags"/>
-                        <field name="session_ids" widget="many2many_tags"/>
+            <form string="POS Customer Report">
+                <sheet>
+                    <group string="Filters" colspan="4">
+                        <group>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="user_ids" widget="many2many_tags"/>
+                            <field name="session_ids" widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <field name="product_ids" widget="many2many_tags"/>
+                            <field name="category_ids" widget="many2many_tags"/>
+                            <field name="branch_ids" widget="many2many_tags"/>
+                            <field name="pricelist_ids" widget="many2many_tags"/>
+                            <field name="state"/>
+                        </group>
                     </group>
-                    <group>
-                        <field name="product_ids" widget="many2many_tags"/>
-                        <field name="category_ids" widget="many2many_tags"/>
-                        <field name="branch_ids" widget="many2many_tags"/>
-                        <field name="pricelist_ids" widget="many2many_tags"/>
-                        <field name="state"/>
-                    </group>
-                    <div class="btn-group" role="group" style="margin: 15px 0;">
+                    <footer>
                         <button name="action_fetch_report"
                                 type="object"
                                 class="btn btn-primary"
-                                style="margin-right: 10px; font-weight: bold; padding: 10px 20px;">
-                            <i class="fa fa-file-text-o" style="margin-right: 5px;"/>
-                            Generate Report
-                        </button>
+                                string="Generate Report"/>
                         <button name="action_generate_csv"
                                 type="object"
-                                class="btn btn-outline-success"
-                                style="font-weight: bold; padding: 10px 20px;">
-                            <i class="fa fa-download" style="margin-right: 5px;"/>
-                            Download CSV
-                        </button>
+                                class="btn btn-success"
+                                string="Download CSV"/>
+                    </footer>
+                    <div class="mt16">
+                        <field name="html_table" widget="html" readonly="1" nolabel="1"/>
                     </div>
-                </group>
-                <div class="mt16">
-                    <field name="html_table" widget="html" readonly="1"/>
-                </div>
+                </sheet>
             </form>
         </field>
     </record>
 
     <!-- Action -->
-    <record id="action_pos_sales_report" model="ir.actions.act_window">
-        <field name="name">POS Sales Report</field>
-        <field name="res_model">pos.sales.report</field>
+    <record id="action_pos_customer_report" model="ir.actions.act_window">
+        <field name="name">POS Customer Report</field>
+        <field name="res_model">pos.customer.report</field>
         <field name="view_mode">form</field>
         <field name="target">current</field>
+        <field name="view_id" ref="view_pos_customer_report_form"/>
     </record>
 
-    <!-- Menu item -->
 
 </odoo>

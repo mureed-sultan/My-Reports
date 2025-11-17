@@ -4,8 +4,6 @@ import base64
 import csv
 import io
 
-from odoo.exceptions import UserError
-
 
 # --------------------------------------------------------
 # Employee-wise Summary Line

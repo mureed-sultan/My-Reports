@@ -1,7 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_pos_sales_report_user,pos.sales.report.user,model_pos_sales_report,base.group_user,1,0,0,0
-access_pos_sales_report_admin,pos.sales.report.admin,model_pos_sales_report,point_of_sale.group_pos_manager,1,1,1,1
-access_pos_customer_report_admin,pos.customer.report.admin,model_pos_customer_report,base.group_system,1,1,1,0
-access_pos_sales_report_wizard_admin,pos.sales.report.wizard.admin,model_pos_sales_report_wizard,point_of_sale.group_pos_manager,1,1,1,1
-access_pos_sales_report_line_admin,pos.sales.report.line.admin,model_pos_sales_report_line,point_of_sale.group_pos_manager,1,1,1,1
-access_pos_sales_report_detail_admin,pos.sales.report.detail.admin,model_pos_sales_report_detail,point_of_sale.group_pos_manager,1,1,1,1
+access_pos_customer_report_user,pos.customer.report.user,model_pos_customer_report,base.group_user,1,0,0,0
+access_pos_customer_report_manager,pos.customer.report.manager,model_pos_customer_report,point_of_sale.group_pos_manager,1,1,1,1
+access_pos_customer_report_admin,pos.customer.report.admin,model_pos_customer_report,base.group_system,1,1,1,1
+access_pos_sales_report_wizard_admin,pos.sales.report.wizard.admin,model_pos_sales_report_wizard,base.group_system,1,1,1,1
+access_pos_sales_report_line_admin,pos.sales.report.line.admin,model_pos_sales_report_line,base.group_system,1,1,1,1
+access_pos_sales_report_detail_admin,pos.sales.report.detail.admin,model_pos_sales_report_detail,base.group_system,1,1,1,1
+access_pos_sales_report_page_admin,pos.sales.report.page.admin,model_pos_sales_report_page,base.group_system,1,1,1,1
