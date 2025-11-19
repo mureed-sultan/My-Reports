@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Report Form View -->
+    <record id="view_pos_customer_report_form" model="ir.ui.view">
+        <field name="name">pos.customer.report.form</field>
+        <field name="model">pos.customer.report</field>
+        <field name="arch" type="xml">
+            <form string="POS Customer Sales Report">
+                <header>
+                    <button name="action_generate_report" type="object" string="Generate" class="btn-primary"/>
+                    <button name="action_export_csv" type="object" string="Export" class="btn-secondary"/>
+                    <button name="action_clear_filters" type="object" string="Clear" class="btn-default"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,generated"/>
+                </header>
+                <sheet>
+                    <!-- Filters Section -->
+                    <group string="Report Filters" col="4">
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="state_filter" widget="radio"/>
+                        <field name="branch_ids" widget="many2many_tags"/>
+
+                        <field name="session_ids" widget="many2many_tags"/>
+                        <field name="user_ids" widget="many2many_tags"/>
+                        <field name="product_ids" widget="many2many_tags"/>
+
+                        <field name="category_ids" widget="many2many_tags"/>
+                        <field name="pricelist_ids" widget="many2many_tags"/>
+                    </group>
+
+                    <!-- Summary Section -->
+                    <group string="Report Summary" col="6">
+                        <field name="total_orders" readonly="1"/>
+                        <field name="total_customers" readonly="1"/>
+                        <field name="total_quantity" readonly="1"/>
+                        <field name="total_discount" readonly="1"/>
+                        <field name="total_subtotal" readonly="1"/>
+                        <field name="total_tax" readonly="1"/>
+                        <field name="total_sales" readonly="1"/>
+                        <field name="report_generated" readonly="1"/>
+                    </group>
+
+                    <!-- Report Data Section -->
+                    <group string="Customer Sales Details" colspan="6">
+                        <field name="report_line_ids" nolabel="1" readonly="1" colspan="6">
+                            <list>
+                                <field name="order_reference"/>
+                                <field name="order_date"/>
+                                <field name="customer_name"/>
+                                <field name="contact"/>
+                                <field name="branch_name"/>
+                                <field name="employee_name"/>
+                                <field name="category_name"/>
+                                <field name="product_name"/>
+                                <field name="product_code"/>
+                                <field name="pricelist_name"/>
+                                <field name="quantity"/>
+                                <field name="unit_price"/>
+                                <field name="list_price"/>
+                                <field name="discount"/>
+                                <field name="line_discount_percent"/>
+                                <field name="subtotal_excl_tax"/>
+                                <field name="subtotal_incl_tax"/>
+                                <field name="tax_amount"/>
+                                <field name="order_total"/>
+                            </list>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View for Report History -->
+    <record id="view_pos_customer_report_list" model="ir.ui.view">
+        <field name="name">pos.customer.report.list</field>
+        <field name="model">pos.customer.report</field>
+        <field name="arch" type="xml">
+            <list string="Customer Reports">
+                <field name="name"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="total_orders"/>
+                <field name="total_sales"/>
+                <field name="state"/>
+                <field name="report_generated"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_pos_customer_report" model="ir.actions.act_window">
+        <field name="name">POS Customer Report</field>
+        <field name="res_model">pos.customer.report</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_pos_customer_report_list"/>
+        <field name="target">current</field>
+    </record>
+</odoo>

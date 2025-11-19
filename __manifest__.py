@@ -19,10 +19,11 @@ customer sales, staff performance, and service tracking.
     # Data files loaded always
     'data': [
         'security/ir.model.access.csv',
-        'views/pos_report.xml',
-        'views/customer_report_views.xml',
-        'views/pos_sales_report.xml',
+        'views/pos_commission_report.xml',
+        'views/pos_customer_report.xml',
         'views/staff_service_performance_report_wizard_view.xml',
+        # 'views/customer_report_views.xml',
+        # 'views/pos_sales_report.xml',
         'views/menus.xml',
     ],
 
