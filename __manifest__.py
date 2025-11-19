@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 {
     'name': "POS Sales Report",
-
-    'summary': "Short (1 phrase/line) summary of the module's purpose",
-
+    'summary': "Generate detailed sales and staff performance reports for POS.",
     'description': """
-Long description of module's purpose
+POS Sales Report
+================
+This module provides advanced reporting for Point of Sale (POS), including
+customer sales, staff performance, and service tracking.
     """,
-
     'author': "iStallana Solutions",
     'website': "https://www.yourcompany.com",
-    'category': 'Uncategorized',
+    'category': 'Point of Sale',
     'version': '0.1',
 
-    # any module necessary for this one to work correctly
+    # Dependencies
     'depends': ['base', 'point_of_sale'],
 
-    # always loaded
+    # Data files loaded always
     'data': [
         'security/ir.model.access.csv',
         'views/pos_report.xml',
@@ -26,9 +26,12 @@ Long description of module's purpose
         'views/menus.xml',
     ],
 
-    # only loaded in demonstration mode
-    'demo': [
-        'demo/demo.xml',
-    ],
-}
+    # Demo dataValueError: No record found for unique ID base.public_user. It may have been deleted.
 
+    'demo': ['demo/demo.xml'],
+
+    # Technical flags
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+}

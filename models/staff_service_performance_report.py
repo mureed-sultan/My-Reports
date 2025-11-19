@@ -54,7 +54,6 @@ class PosSalesReportPage(models.TransientModel):
                 pol.qty AS quantity,
                 pol.price_unit AS unit_price,
                 (pol.qty * pol.price_unit) AS line_total,
-                uom.name AS uom_name,
                 SUM(pol.qty * pol.price_unit) OVER (PARTITION BY he.id) AS employee_total_sale
             FROM pos_order po
             LEFT JOIN hr_employee he ON po.employee_id = he.id
