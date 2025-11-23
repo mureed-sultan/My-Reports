@@ -31,24 +31,52 @@
                         <field name="report_generated" readonly="1"/>
                     </group>
 
-                    <!-- Report Data Section -->
-                    <group string="Staff Performance Details" colspan="6">
+                    <!-- Detailed Report Data Section -->
+                    <group string="Detailed Transaction Data" colspan="6">
                         <field name="report_line_ids" nolabel="1" readonly="1" colspan="6">
                             <list>
+                                <!-- Employee Details -->
                                 <field name="employee_name"/>
+                                <field name="employee_batch_no"/>
                                 <field name="job_position"/>
                                 <field name="department_name"/>
-                                <field name="branch_name"/>
                                 <field name="work_email"/>
                                 <field name="work_phone"/>
                                 <field name="employee_national_id"/>
-                                <field name="total_orders"/>
-                                <field name="total_quantity"/>
-                                <field name="total_sales"/>
+
+                                <!-- Order Details -->
+                                <field name="order_name"/>
+                                <field name="pos_reference"/>
+                                <field name="order_total"/>
+                                <field name="order_date"/>
+
+                                <!-- Session and Branch -->
+                                <field name="session_name"/>
+                                <field name="branch_name"/>
+
+                                <!-- Payment Details -->
+                                <field name="payment_method"/>
+                                <field name="payment_amount"/>
+
+                                <!-- Customer Details -->
+                                <field name="customer_name"/>
+                                <field name="customer_phone"/>
+                                <field name="customer_mobile"/>
+                                <field name="customer_email"/>
+
+                                <!-- Product Details -->
+                                <field name="product_name"/>
+                                <field name="product_category"/>
+                                <field name="product_type"/>
+                                <field name="product_internal_code"/>
+                                <field name="quantity"/>
+                                <field name="unit_price"/>
+                                <field name="line_total"/>
+
+                                <!-- Performance Metrics -->
+                                <field name="employee_total_sale"/>
                                 <field name="commission_rate"/>
-                                <field name="sales_target"/>
                                 <field name="earned_commission"/>
-                                <field name="target_achievement_rate"/>
                             </list>
                         </field>
                     </group>
@@ -67,6 +95,7 @@
                 <field name="start_date"/>
                 <field name="end_date"/>
                 <field name="total_employees"/>
+                <field name="total_orders"/>
                 <field name="total_sales"/>
                 <field name="state"/>
                 <field name="report_generated"/>
